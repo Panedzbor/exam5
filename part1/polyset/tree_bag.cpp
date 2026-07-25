@@ -115,3 +115,36 @@ tree_bag::node *tree_bag::copy_node(node *current) {
 		return new_node;
 	}
 }
+
+void tree_bag::export_to(int *& array, int & size) const
+{
+	int count = count_nodes(tree);
+	size = count;
+	array = new int[count];
+	count = 0;
+	copy_nodes(tree, array, count);
+}
+
+int tree_bag::count_nodes(node *cur) const
+{
+	int i = 1;
+
+	if (!cur)
+		return 0;
+	if (cur->l)
+		i += count_nodes(cur->l);
+	if (cur->r)
+		i += count_nodes(cur->r);
+	return i;
+}
+
+void tree_bag::copy_nodes(node* cur, int * array, int & count) const
+{
+	if (!cur)
+		return;
+	if (cur->l)
+		copy_nodes(cur->l, array, count);
+	array[count++] = cur->value;
+	if (cur->r)
+		copy_nodes(cur->r, array, count);
+}

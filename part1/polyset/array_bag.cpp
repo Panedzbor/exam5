@@ -78,3 +78,11 @@ void array_bag::clear() {
 	}
 	size = 0;
 }
+
+void array_bag::export_to(int *& array, int & size) const
+{
+	array = new int[this->size];
+	size = this->size;
+	for (int i = 0; i < size; i++)
+		array[i] = data[i];
+}

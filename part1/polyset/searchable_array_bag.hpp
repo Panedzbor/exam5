@@ -9,5 +9,7 @@ class searchable_array_bag : public searchable_bag, public array_bag {
         searchable_array_bag(const searchable_array_bag & original);
         searchable_array_bag & operator=(const searchable_array_bag & original);
         ~searchable_array_bag();
+
         bool has(int) const;
+
 };
