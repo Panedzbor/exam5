@@ -17,5 +17,5 @@ public:
   void insert(int *, int);
   void print() const;
   void clear();
-  void export_to(int *& array, int & size) const;
+  int* export_to() const;
 };

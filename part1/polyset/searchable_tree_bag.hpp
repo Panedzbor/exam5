@@ -9,5 +9,7 @@ class searchable_tree_bag : public searchable_bag, public tree_bag {
         searchable_tree_bag(const searchable_tree_bag & original);
         searchable_tree_bag & operator=(const searchable_tree_bag & original);
         ~searchable_tree_bag();
+        
         bool has(int) const;
+        int get_size() const;
 };

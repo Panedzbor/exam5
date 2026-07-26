@@ -2,7 +2,7 @@
 #include <iostream>
 
 tree_bag::tree_bag() {
-	tree = nullptr;
+	tree = NULL;
 }
 
 tree_bag::tree_bag(const tree_bag &src) {
@@ -23,7 +23,7 @@ tree_bag &tree_bag::operator=(const tree_bag &src) {
 
 tree_bag::node *tree_bag::extract_tree() {
 	node *temp = tree;
-	tree = nullptr;
+	tree = NULL;
 	return temp;
 }
 
@@ -37,24 +37,24 @@ void tree_bag::insert(int item) {
 	// alloc new node
 	std::cout << "create node: " << item << std::endl;
 	new_node->value = item;
-	new_node->l = nullptr;
-	new_node->r = nullptr;
+	new_node->l = NULL;
+	new_node->r = NULL;
 
-	if (tree == nullptr) {
+	if (tree == NULL) {
 		// std::cout << "tree is null - adding" << std::endl;
 		tree = new_node;
 	} else {
 		node *current = tree;
 		while (true) {
 			if (item < current->value) {
-				if (current->l == nullptr) {
+				if (current->l == NULL) {
 					current->l = new_node;
 					break;
 				} else {
 					current = current->l;
 				}
 			} else if (item > current->value) {
-				if (current->r == nullptr) {
+				if (current->r == NULL) {
 					current->r = new_node;
 					break;
 				} else {
@@ -82,12 +82,12 @@ void tree_bag::print() const {
 
 void tree_bag::clear() {
 	destroy_tree(tree);
-	tree = nullptr;
+	tree = NULL;
 }
 
 // defined as static functions in the class
 void tree_bag::destroy_tree(node *current) {
-	if (current != nullptr) {
+	if (current != NULL) {
 		std::cout << "destroying value: " << current->value << std::endl;
 		destroy_tree(current->l);
 		destroy_tree(current->r);
@@ -96,7 +96,7 @@ void tree_bag::destroy_tree(node *current) {
 }
 
 void tree_bag::print_node(node *current) {
-	if (current != nullptr) {
+	if (current != NULL) {
 		print_node(current->l);
 		if (current->value != 0)
 			std::cout << current->value << " ";
@@ -105,8 +105,8 @@ void tree_bag::print_node(node *current) {
 }
 
 tree_bag::node *tree_bag::copy_node(node *current) {
-	if (current == nullptr) {
-		return nullptr;
+	if (current == NULL) {
+		return NULL;
 	} else {
 		node *new_node = new node;
 		new_node->value = current->value;
@@ -116,13 +116,13 @@ tree_bag::node *tree_bag::copy_node(node *current) {
 	}
 }
 
-void tree_bag::export_to(int *& array, int & size) const
+int* tree_bag::export_to() const
 {
-	int count = count_nodes(tree);
-	size = count;
-	array = new int[count];
-	count = 0;
-	copy_nodes(tree, array, count);
+	int size = count_nodes(tree);
+	int* array = new int[size];
+	int count = 0;
+	nodesToArr(tree, array, count);
+	return array;
 }
 
 int tree_bag::count_nodes(node *cur) const
@@ -138,13 +138,13 @@ int tree_bag::count_nodes(node *cur) const
 	return i;
 }
 
-void tree_bag::copy_nodes(node* cur, int * array, int & count) const
+void tree_bag::nodesToArr(node* cur, int * array, int & count) const
 {
 	if (!cur)
 		return;
 	if (cur->l)
-		copy_nodes(cur->l, array, count);
+		nodesToArr(cur->l, array, count);
 	array[count++] = cur->value;
 	if (cur->r)
-		copy_nodes(cur->r, array, count);
+		nodesToArr(cur->r, array, count);
 }

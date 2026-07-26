@@ -21,3 +21,8 @@ bool searchable_array_bag::has(int dig) const
     }
     return false;
 }
+
+int searchable_array_bag::get_size() const
+{
+    return size;
+}

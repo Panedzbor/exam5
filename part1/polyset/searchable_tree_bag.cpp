@@ -16,7 +16,7 @@ bool searchable_tree_bag::has(int dig) const
 {
     node * cur = tree;
 
-    while (cur != nullptr)
+    while (cur != NULL)
     {
         if (dig == cur->value)
             return true;
@@ -26,4 +26,9 @@ bool searchable_tree_bag::has(int dig) const
             cur = cur->r;
     }
     return false;
+}
+
+int searchable_tree_bag::get_size() const
+{
+    return count_nodes(tree);
 }

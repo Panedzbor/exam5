@@ -16,8 +16,8 @@ class set {
         bool has(int) const;
         const searchable_bag & get_bag() const;
     private:
-        //int* set_arr;
         set();
+        int size;
+        int* data;
         const searchable_bag * bag;
-        void wrap_to_set();
 };
