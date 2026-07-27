@@ -168,23 +168,11 @@ bigint bigint::operator<<(bigint times) const
     return temp;
 }
 
-bigint bigint::operator<<(size_t times) const
-{
-    bigint temp(*this);
-
-    return temp << (bigint)times;
-}
-
 bigint& bigint::operator<<=(bigint times)
 {
     for (bigint i(0); i < times; i++)
         v_bigint.push_back(0);
     return *this;
-}
-
-bigint& bigint::operator<<=(size_t times)
-{
-    return *this <<= (bigint)times;
 }
 
 bigint bigint::operator>>(bigint times) const
@@ -202,13 +190,6 @@ bigint bigint::operator>>(bigint times) const
     return temp;
 }
 
-bigint bigint::operator>>(size_t times) const
-{
-    bigint temp(*this);
-
-    return temp = temp >> (bigint)times;
-}
-
 bigint& bigint::operator>>=(bigint times)
 {
     if (times >= (bigint)getSize())
@@ -220,9 +201,4 @@ bigint& bigint::operator>>=(bigint times)
     for (bigint i(0); i < times; i++)
         v_bigint.pop_back();
     return *this;
-}
-
-bigint& bigint::operator>>=(size_t times)
-{
-    return *this >>= (bigint)times;
 }

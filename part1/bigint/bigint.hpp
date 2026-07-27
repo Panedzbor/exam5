@@ -27,13 +27,9 @@ class bigint {
 		bool operator>=(const bigint& r_operand) const;
 		bool operator!=(const bigint& r_operand) const;
 		bigint operator>>(bigint times) const;
-		bigint operator>>(size_t times) const;
 		bigint operator<<(bigint times) const;
-		bigint operator<<(size_t times) const;
 		bigint& operator>>=(bigint times);
-		bigint& operator>>=(size_t times);
 		bigint& operator<<=(bigint times);
-		bigint& operator<<=(size_t times);
 
 		int getDigit(size_t index) const {return v_bigint[index];};
 		size_t getSize() const {return v_bigint.size();};
