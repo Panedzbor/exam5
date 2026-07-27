@@ -38,7 +38,7 @@ class vect2 {
 
         int x;
         int y;
-        int len;
+        int sqlen;
 };
 
 std::ostream & operator<<(std::ostream &, vect2 &);

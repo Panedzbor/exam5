@@ -1,13 +1,13 @@
 #include "vect2.hpp"
 
-vect2::vect2() : x(0), y(0), len(0) {}
-vect2::vect2(int x, int y) : x(x), y(y), len(x + y) {}
-vect2::vect2(const vect2 & orig): x(orig.x), y(orig.y), len(orig.len) {}
+vect2::vect2() : x(0), y(0), sqlen(0) {}
+vect2::vect2(int x, int y) : x(x), y(y), sqlen(x + y) {}
+vect2::vect2(const vect2 & orig): x(orig.x), y(orig.y), sqlen(orig.sqlen) {}
 vect2 & vect2::operator=(const vect2 & orig)
 {
     x = orig.x;
     y = orig.y;
-    len = orig.len;
+    sqlen = orig.sqlen;
     return *this;
 }
 vect2::~vect2() {}
@@ -16,7 +16,7 @@ vect2 & vect2::operator+=(const vect2 &plus)
 {
     x += plus.x;
     y += plus.y;
-    len = x + y;
+    sqlen = x * x + y * y;
     return *this;
 }
 
@@ -36,7 +36,7 @@ vect2 & vect2::operator-=(const vect2 &minus)
 {
     x -= minus.x;
     y -= minus.y;
-    len = x + y;
+    sqlen = x * x + y * y;
     return *this;
 }
 
@@ -44,7 +44,7 @@ vect2 & vect2::operator*=(int scalar)
 {
     x *= scalar;
     y *= scalar;
-    len = x + y;
+    sqlen = x * x + y * y;
     return *this;
 }
 
@@ -58,7 +58,7 @@ vect2 & vect2::operator++()
 {
     x += 1;
     y += 1;
-    len = x + y;
+    sqlen = x * x + y * y;
     return *this;
 }
 
@@ -67,7 +67,7 @@ vect2 vect2::operator++(int)
     vect2 temp(*this);
     x += 1;
     y += 1;
-    len = x + y;
+    sqlen = x * x + y * y;
     return temp;
 }
 
@@ -75,7 +75,7 @@ vect2 & vect2::operator--()
 {
     x -= 1;
     y -= 1;
-    len = x + y;
+    sqlen = x * x + y * y;
     return *this;
 }
 
@@ -84,7 +84,7 @@ vect2 vect2::operator--(int)
     vect2 temp(*this);
     x -= 1;
     y -= 1;
-    len = x + y;
+    sqlen = x * x + y * y;
     return temp;
 }
 
@@ -107,22 +107,22 @@ bool vect2::operator!=(const vect2 & v) const
 
 bool vect2::operator<(const vect2 & v) const
 { 
-    return len < v.len;
+    return sqlen < v.sqlen;
 }
 
 bool vect2::operator<=(const vect2 & v) const
 {
-    return len <= v.len;
+    return sqlen <= v.sqlen;
 }
 
 bool vect2::operator>(const vect2 & v) const
 {
-    return len > v.len;
+    return sqlen > v.sqlen;
 }
 
 bool vect2::operator>=(const vect2 & v) const
 {
-    return len >= v.len;
+    return sqlen >= v.sqlen;
 }
 
 int & vect2::operator[](int i)
