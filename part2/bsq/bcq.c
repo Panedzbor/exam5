@@ -1,90 +1,290 @@
-#define ROWS 9
-#define COLS 28
-
 #include "bsq.h"
+
+void run_program(char *filename);
+bool parser(char * filename, t_map * map);
+bool check_map(int stage, int fl_len, t_map * map, t_len l);
+void find_solution(t_map * map);
+void find_squares(int row, int start_col, t_map * map);
+bool fillable(char field, char empty);
+bool check_down_rows(int row, int col, int sq_len, int count, t_map * map);
+void record_square(int row, int start_col, int sq_len, t_map * map);
+void fill_solution(char * filename, t_map map);
+bool check_dimension(int row, int col, t_map map);
+void clear_mem(t_map * map);
 
 int main(int argc, char * argv[])
 {
-    char * filename;
+    char * filename = NULL;
+    size_t size = 0;
     if (argc < 2)
-        fscanf(stdin, "Input the filename: %s", filename);
-    else
-        filename = argv[1];
-    t_map map;
-    parser(filename, &map);
-    
-    for (int i = 0; i < ROWS; i++)
     {
-        process_each_cell(i);   
+        fprintf(stdout, "Input filename:/n");
+        if (getline(&filename, &size, stdin) != -1)
+        {
+            run_program(filename);
+            free(filename);
+        }
+        else
+            fprintf(stderr, "Could not read from stdin\n"); 
+    }
+    else
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            filename = argv[i];
+            run_progam(filename);
+        }
     }
     return 0;
 }
 
-void parser(char * filename, t_map * map)
+void run_program(char *filename)
 {
+    t_map map;
+    if (!parser(filename, &map))
+        return 1;
+    find_solution(&map);
+    fill_solution(filename, map);
+    clear_mem(&map);
+}
+
+bool parser(char * filename, t_map * map)
+{
+    // open file
     FILE * file = fopen(filename, "r");
     if (!file)
+    {
         fprintf(stderr, "Error: File couldn't be opened\n");
+        return false;
+    }
     
+    // parse first line
     char *first_line = NULL;
     size_t len = 0;
     if (getline(&first_line, &len, file) == -1)
+    {
         fprintf(stderr, "Error: File couldn't be read\n");
-    map->num_of_rows = first_line[0];
+        fclose(file);
+        return false;
+    }
+    // check first line on missing chars
+    if (!check_map(1, len, NULL, (t_len){0}))
+    {
+        fclose(file);
+        return false;
+    }
+    // assign first line values
+    map->fline = first_line;
+    map->num_of_rows = first_line[0] - '0';
     map->empty = first_line[2];
     map->obstacle = first_line[4];
     map->full = first_line[6];
-    free(first_line);
 
+    // init other values
+    map->sq_col = 0;
+    map->sq_row = 0;
+    map->sq_len = 0;
+
+    // check for duplicates and non-printables
+    if (!check_map(2, 0, map, (t_len){0}))
+    {
+        fclose(file);
+        return false;
+    }
+
+    // alloc mem for map
     map->map = (char **)calloc(map->num_of_rows, sizeof(char *));
     if (!map->map)
+    {
         fprintf(stderr, "Error: Allocation error\n");
+        fclose(file);
+        return false;
+    }
+    for (int i = 0; i < map->num_of_rows; i++)
+        map->map[i] = NULL;
 
+    // assign map + check line lengths
     char * line = NULL;
-    for (int i = 0; getline(&line, &len, file) != -1; i++)
+    size_t prev_len = 0;
+    int i;
+    for (i = 0; getline(&line, &len, file) != -1; i++)
+    {
+        if (!check_map(3, 0, NULL, (t_len){prev_len, len}))
+        {
+            fclose(file);
+            return false;
+        }
         map->map[i] = line;
+        prev_len = len;
+    }
 
+    // check if there is at least one line on the map
+    // check if last line ends with a line break
+    // check for all chars
+    if (!check_map(4, 0, map, (t_len){0, i}) || !check_map(5, 0, map, (t_len){0, len}) || !check_map(6, 0, map, (t_len){0, len}))
+    {
+        fclose(file);
+        return false;
+    }
+    // check if last line ends with a line break
+    if (!check_map(5, 0, map, (t_len){0, len}))
+    {
+        fclose(file);
+        return false;
+    }
+
+    // close file
     fclose(file);
+    return true;
 }
 
-void process_each_cell(int row)
+bool check_map(int stage, int fl_len, t_map * map, t_len l)
 {
-    for (int i = 0; map[row][i] != '\n'; i++)
+    bool result = true;
+
+    switch (stage)
     {
-        find_squares(row, i);
+        case 1:
+            if (fl_len < 8)
+                result = false;
+            break;
+        case 2:
+            if (map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full)
+                result = false;
+            else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->empty < 127 && map->obstacle > 31 && map->obstacle < 127))
+                result = false;
+            break;
+        case 3:
+            if (l.len == 1)
+                result = false;
+            else if (!l.prev_len)
+                result = true;
+            else if (l.len != l.prev_len)
+                result = false;
+            break;
+        case 4:
+            if (!l.len)
+                result = false;
+            break;
+        case 5:
+            if (map->map[map->num_of_rows - 1][l.len - 1] != '\n')
+                result = false;
+            break;
+        case 6:
+            for (int i = 0; i < map->num_of_rows && result; i++)
+            {
+                for (int j = 0; map->map[i][j]; j++)
+                {
+                    char mch = map->map[i][j];
+                    if (mch != map->empty && mch != map->full && mch != map->obstacle && !(j == l.len - 1 && mch == '\n'))
+                    {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+            break;
+    }
+    
+    if (!result)
+        fprintf(stderr, "map error\n");
+    return result;
+}
+
+void find_solution(t_map * map)
+{
+    for (int i = 0; i < map->num_of_rows; i++)
+    {
+        for (int j = 0; map->map[i][j] != '\n'; i++)
+            find_squares(i, j, map);
+    }  
+}
+
+void find_squares(int row, int start_col, t_map * map)
+{
+    int sq_len = 0;
+
+    for (int i = start_col; map->map[row][i] != '\n'; i++)
+    {
+        if (!fillable(map->map[row][i], map->empty))
+            break;
+        sq_len++;
+        if (sq_len > 1 && !check_down_rows(row + 1, start_col, sq_len, 1, map))
+            break;
+        record_square(row, start_col, sq_len, map);
     }
 }
 
-void find_squares(int row, int start_col)
+bool fillable(char field, char empty)
 {
-    int len = 0;
-
-    for (int i = start_col; map[row][i] != '\n'; i++)
-    {
-        if (!fillable(map[row][i]))
-            break;
-        len++;
-        if (!check_down_rows(row + 1, start_col, len, 0))
-            break;
-        record_square(row, i, len);
-    }
-}
-
-bool fillable(char field)
-{
-    if (field == EMPTY_CH)
+    if (field == empty)
         return true;
     return false;
 }
 
-bool check_down_rows(int row, int col, int len, int count)
+bool check_down_rows(int row, int col, int sq_len, int count, t_map * map)
 {
-    for (int i = col, j = 0; j < len; i++, j++)
+    for (int i = col, j = 0; j < sq_len; i++, j++)
     {
-        if (row == ROWS || !fillable(map[row][i]))
+        if (row == map->num_of_rows || !fillable(map->map[row][i], map->empty))
             return false;
     }
-    if (++count == len)
+    if (++count == sq_len)
         return true;
-    return check_down_rows(row + 1, col, len, count);
+    return check_down_rows(row + 1, col, sq_len, count, map);
+}
+
+void record_square(int row, int start_col, int sq_len, t_map * map)
+{
+    if (sq_len <= map->sq_len)
+        return;
+    map->sq_row = row;
+    map->sq_col = start_col;
+    map->sq_len = sq_len;
+}
+
+void fill_solution(char * filename, t_map map)
+{
+    // open file
+    FILE * file = fopen(filename, "w");
+    if (!file)
+    {
+        fprintf(stderr, "Error: File couldn't be opened\n");
+        return;
+    }
+
+    // write to file
+    fputs(map.fline, file);
+    for (int i = 0; i < map.num_of_rows; i++)
+    {
+        for (int j = 0; map.map[i][j]; j++)
+        {
+            char str[2] = {'\0', '\0'};
+            if (check_dimension(i, j, map))
+                str[0] = map.full;
+            else
+                str[0] = map.map[i][j];
+            fputs(str, file);
+        }
+    }
+
+    fclose(file);
+}
+
+bool check_dimension(int row, int col, t_map map)
+{
+    if (row >= map.sq_row && row < map.sq_row + map.sq_len && col >= map.sq_col && col < map.sq_col + map.sq_len)
+        return true;
+    return false;
+}
+
+void clear_mem(t_map * map)
+{
+    if (map->fline)
+        free(map->fline);
+    for (int i = 0; i < map->num_of_rows; i++)
+    {
+        if (map->map[i])
+            free(map->map[i]);
+    }
 }

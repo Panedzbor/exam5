@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct s_map
 {
@@ -10,7 +11,17 @@ typedef struct s_map
     char empty;
     char obstacle;
     char full;
+    char * fline;
     char ** map;
+    int sq_row;
+    int sq_col;
+    int sq_len;
 } t_map;
+
+typedef struct s_len
+{
+    size_t prev_len;
+    size_t len;
+} t_len;
 
 #endif
