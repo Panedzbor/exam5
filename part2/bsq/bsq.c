@@ -1,5 +1,6 @@
 #include "bsq.h"
 
+char * trunc_name(char * filename, size_t size);
 void run_program(char *filename);
 bool parser(char * filename, t_map * map);
 bool check_map(int stage, int fl_len, t_map * map, t_len l);
@@ -18,10 +19,15 @@ int main(int argc, char * argv[])
     size_t size = 0;
     if (argc < 2)
     {
-        fprintf(stdout, "Input filename:/n");
+        fprintf(stdout, "Input filename:\n");
         if (getline(&filename, &size, stdin) != -1)
         {
-            run_program(filename);
+            char * trunc = trunc_name(filename, size);
+            if (trunc)
+            {
+                run_program(trunc);
+                free(trunc);
+            }
             free(filename);
         }
         else
@@ -32,17 +38,34 @@ int main(int argc, char * argv[])
         for (int i = 1; i < argc; i++)
         {
             filename = argv[i];
-            run_progam(filename);
+            run_program(filename);
         }
     }
     return 0;
+}
+
+char * trunc_name(char * filename, size_t size)
+{
+    char * new = (char *)calloc(size, sizeof(char));
+    if (!new)
+    {
+        fprintf(stderr, "Error truncating the filename\n");
+        return NULL;
+    }
+
+    size_t i;
+    for (i = 0; i < size - 1; i++)
+        new[i] = filename[i];
+    new[i] = '\0';
+
+    return new;
 }
 
 void run_program(char *filename)
 {
     t_map map;
     if (!parser(filename, &map))
-        return 1;
+        return;
     find_solution(&map);
     fill_solution(filename, map);
     clear_mem(&map);
@@ -176,7 +199,7 @@ bool check_map(int stage, int fl_len, t_map * map, t_len l)
                 for (int j = 0; map->map[i][j]; j++)
                 {
                     char mch = map->map[i][j];
-                    if (mch != map->empty && mch != map->full && mch != map->obstacle && !(j == l.len - 1 && mch == '\n'))
+                    if (mch != map->empty && mch != map->full && mch != map->obstacle && !((size_t)j == l.len - 1 && mch == '\n'))
                     {
                         result = false;
                         break;
