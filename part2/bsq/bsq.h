@@ -20,8 +20,8 @@ typedef struct s_map
 
 typedef struct s_len
 {
-    size_t prev_len;
-    size_t len;
+    size_t len1;
+    size_t len2;
 } t_len;
 
 #endif

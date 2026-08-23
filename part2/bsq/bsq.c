@@ -4,8 +4,9 @@ char * trunc_name(char * filename, size_t size);
 size_t ft_strlen(char * str);
 void run_program(char *filename);
 bool parser(char * filename, t_map * map);
-bool check_map(int stage, int fl_len, t_map * map, t_len l);
+bool check_map(int stage, t_map * map, t_len l, char * str);
 char * ft_strcpy(char * src);
+int strtonum(char * str, int n);
 void find_solution(t_map * map);
 void find_squares(int row, int start_col, t_map * map);
 bool fillable(char field, char empty);
@@ -75,7 +76,7 @@ size_t ft_strlen(char * str)
 
 void run_program(char *filename)
 {
-    t_map map;
+    t_map map = {0};
     if (parser(filename, &map))
     {
         find_solution(&map);
@@ -103,18 +104,23 @@ bool parser(char * filename, t_map * map)
         fclose(file);
         return false;
     }
+    // count how long is row num
+    int n = 0;
+    while (first_line[n] != ' ')
+        n++;
+    // check row num
     // check first line on missing chars
-    if (!check_map(1, ft_strlen(first_line), NULL, (t_len){0}))
+    if (!check_map(0, map, (t_len){n, 0}, first_line) || !check_map(1, map, (t_len){n, ft_strlen(first_line)}, 0))
     {
         fclose(file);
         return false;
     }
     // assign first line values
     map->fline = first_line;
-    map->num_of_rows = first_line[0] - '0';
-    map->empty = first_line[2];
-    map->obstacle = first_line[4];
-    map->full = first_line[6];
+    map->num_of_rows = strtonum(first_line, n);
+    map->empty = first_line[n + 1];
+    map->obstacle = first_line[n + 3];
+    map->full = first_line[n + 5];
 
     // init other values
     map->sq_col = 0;
@@ -122,7 +128,7 @@ bool parser(char * filename, t_map * map)
     map->sq_len = 0;
 
     // check for duplicates and non-printables
-    if (!check_map(2, 0, map, (t_len){0}))
+    if (!check_map(2, map, (t_len){0}, 0))
     {
         fclose(file);
         return false;
@@ -147,9 +153,13 @@ bool parser(char * filename, t_map * map)
     {
         char * line = ft_strcpy(buf);
         size_t linelen = ft_strlen(line);
-        if (!check_map(3, 0, NULL, (t_len){prev_len, linelen}))
+        if (!check_map(3, map, (t_len){i, 0}, 0) || !check_map(4, map, (t_len){prev_len, linelen}, 0))
         {
             fclose(file);
+            if (buf)
+                free(buf);
+            if (line)
+                free(line);
             return false;
         }
         map->map[i] = line;
@@ -159,9 +169,9 @@ bool parser(char * filename, t_map * map)
         free(buf);
 
     // check if there is at least one line on the map
-    // check if last line ends with a line break
+    // check if last line ends with a line break + check if rows count equals file info
     // check for all chars
-    if (!check_map(4, 0, map, (t_len){0, i}) || !check_map(5, 0, map, (t_len){0, prev_len}) || !check_map(6, 0, map, (t_len){0, prev_len}))
+    if (!check_map(5, map, (t_len){i, 0}, 0) || !check_map(6, map, (t_len){prev_len, i}, 0) || !check_map(7, map, (t_len){prev_len, 0}, 0))
     {
         fclose(file);
         return false;
@@ -170,6 +180,18 @@ bool parser(char * filename, t_map * map)
     // close file
     fclose(file);
     return true;
+}
+
+int strtonum(char * str, int n)
+{
+    char temp[n];
+    for (int i = 0; i < n; i++)
+        temp[i] = str[i];
+    int num = 0;
+    int mult = 1;
+    for (int i = n - 1; i >= 0; i--, mult *= 10)
+        num += (temp[i] - '0') * mult;
+    return num;
 }
 
 char * ft_strcpy(char * src)
@@ -187,14 +209,23 @@ char * ft_strcpy(char * src)
     return cpy;
 }
 
-bool check_map(int stage, int fl_len, t_map * map, t_len l)
+bool check_map(int stage, t_map * map, t_len l, char * str)
 {
     bool result = true;
 
     switch (stage)
     {
+        case 0:
+            if (!l.len1)
+                result = false;
+            for (size_t i = 0; i < l.len1; i++)
+            {
+                if (!(str[i] >= '0' && str[i] <= '9'))
+                    result = false;
+            }
+            break;
         case 1:
-            if (fl_len < 8)
+            if (l.len2 < l.len1 + 7)
                 result = false;
             break;
         case 2:
@@ -204,28 +235,32 @@ bool check_map(int stage, int fl_len, t_map * map, t_len l)
                 result = false;
             break;
         case 3:
-            if (l.len == 1)
-                result = false;
-            else if (!l.prev_len)
-                result = true;
-            else if (l.len != l.prev_len)
+            if (l.len1 >= (size_t)map->num_of_rows)
                 result = false;
             break;
         case 4:
-            if (!l.len)
+            if (l.len2 == 1)
+                result = false;
+            else if (!l.len1)
+                result = true;
+            else if (l.len2 != l.len1)
                 result = false;
             break;
         case 5:
-            if (map->map[map->num_of_rows - 1][l.len - 1] != '\n')
+            if (!l.len1)
                 result = false;
             break;
         case 6:
+            if ((size_t)map->num_of_rows != l.len2 || map->map[map->num_of_rows - 1][l.len1 - 1] != '\n')
+                result = false;
+            break;
+        case 7:
             for (int i = 0; i < map->num_of_rows && result; i++)
             {
                 for (int j = 0; map->map[i][j]; j++)
                 {
                     char mch = map->map[i][j];
-                    if (mch != map->empty && mch != map->full && mch != map->obstacle && !((size_t)j == l.len - 1 && mch == '\n'))
+                    if (mch != map->empty && mch != map->full && mch != map->obstacle && !((size_t)j == l.len1 - 1 && mch == '\n'))
                     {
                         result = false;
                         break;
