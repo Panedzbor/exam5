@@ -5,7 +5,7 @@ size_t ft_strlen(char * str);
 void run_program(char *filename);
 bool parser(char * filename, t_map * map);
 bool check_map(int stage, t_map * map, t_len l, char * str);
-char * ft_strcpy(char * src);
+char * strdupl(char * src);
 int strtonum(char * str, int n);
 void find_solution(t_map * map);
 void find_squares(int row, int start_col, t_map * map);
@@ -142,8 +142,6 @@ bool parser(char * filename, t_map * map)
         fclose(file);
         return false;
     }
-    for (int i = 0; i < map->num_of_rows; i++)
-        map->map[i] = NULL;
 
     // assign map + check line lengths
     char * buf = NULL;
@@ -151,7 +149,7 @@ bool parser(char * filename, t_map * map)
     int i;
     for (i = 0; getline(&buf, &len, file) != -1; i++)
     {
-        char * line = ft_strcpy(buf);
+        char * line = strdupl(buf);
         size_t linelen = ft_strlen(line);
         if (!check_map(3, map, (t_len){i, 0}, 0) || !check_map(4, map, (t_len){prev_len, linelen}, 0))
         {
@@ -194,7 +192,7 @@ int strtonum(char * str, int n)
     return num;
 }
 
-char * ft_strcpy(char * src)
+char * strdupl(char * src)
 {
     size_t len = ft_strlen(src);
     if (!len)
@@ -231,7 +229,7 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
         case 2:
             if (map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full)
                 result = false;
-            else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->empty < 127 && map->obstacle > 31 && map->obstacle < 127))
+            else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->full < 127 && map->obstacle > 31 && map->obstacle < 127))
                 result = false;
             break;
         case 3:
