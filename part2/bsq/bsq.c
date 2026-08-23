@@ -1,9 +1,11 @@
 #include "bsq.h"
 
 char * trunc_name(char * filename, size_t size);
+size_t ft_strlen(char * str);
 void run_program(char *filename);
 bool parser(char * filename, t_map * map);
 bool check_map(int stage, int fl_len, t_map * map, t_len l);
+char * ft_strcpy(char * src);
 void find_solution(t_map * map);
 void find_squares(int row, int start_col, t_map * map);
 bool fillable(char field, char empty);
@@ -22,7 +24,7 @@ int main(int argc, char * argv[])
         fprintf(stdout, "Input filename:\n");
         if (getline(&filename, &size, stdin) != -1)
         {
-            char * trunc = trunc_name(filename, size);
+            char * trunc = trunc_name(filename, ft_strlen(filename));
             if (trunc)
             {
                 run_program(trunc);
@@ -61,6 +63,16 @@ char * trunc_name(char * filename, size_t size)
     return new;
 }
 
+size_t ft_strlen(char * str)
+{
+    if (!str)
+        return 0;
+    size_t i = 0;
+    while (str[i])
+        i++;
+    return i;
+}
+
 void run_program(char *filename)
 {
     t_map map;
@@ -91,7 +103,7 @@ bool parser(char * filename, t_map * map)
         return false;
     }
     // check first line on missing chars
-    if (!check_map(1, len, NULL, (t_len){0}))
+    if (!check_map(1, ft_strlen(first_line), NULL, (t_len){0}))
     {
         fclose(file);
         return false;
@@ -127,30 +139,28 @@ bool parser(char * filename, t_map * map)
         map->map[i] = NULL;
 
     // assign map + check line lengths
-    char * line = NULL;
+    char * buf = NULL;
     size_t prev_len = 0;
     int i;
-    for (i = 0; getline(&line, &len, file) != -1; i++)
+    for (i = 0; getline(&buf, &len, file) != -1; i++)
     {
-        if (!check_map(3, 0, NULL, (t_len){prev_len, len}))
+        char * line = ft_strcpy(buf);
+        size_t linelen = ft_strlen(line);
+        if (!check_map(3, 0, NULL, (t_len){prev_len, linelen}))
         {
             fclose(file);
             return false;
         }
         map->map[i] = line;
-        prev_len = len;
+        prev_len = linelen;
     }
+    if (buf)
+        free(buf);
 
     // check if there is at least one line on the map
     // check if last line ends with a line break
     // check for all chars
-    if (!check_map(4, 0, map, (t_len){0, i}) || !check_map(5, 0, map, (t_len){0, len}) || !check_map(6, 0, map, (t_len){0, len}))
-    {
-        fclose(file);
-        return false;
-    }
-    // check if last line ends with a line break
-    if (!check_map(5, 0, map, (t_len){0, len}))
+    if (!check_map(4, 0, map, (t_len){0, i}) || !check_map(5, 0, map, (t_len){0, prev_len}) || !check_map(6, 0, map, (t_len){0, prev_len}))
     {
         fclose(file);
         return false;
@@ -159,6 +169,21 @@ bool parser(char * filename, t_map * map)
     // close file
     fclose(file);
     return true;
+}
+
+char * ft_strcpy(char * src)
+{
+    size_t len = ft_strlen(src);
+    if (!len)
+        return NULL;
+    char * cpy = (char *)calloc(len + 1, sizeof(char));
+    if (!cpy)
+        return NULL;
+    size_t i;
+    for (i = 0; i < len; i++)
+        cpy[i] = src[i];
+    cpy[i] = '\0';
+    return cpy;
 }
 
 bool check_map(int stage, int fl_len, t_map * map, t_len l)
@@ -218,7 +243,7 @@ void find_solution(t_map * map)
 {
     for (int i = 0; i < map->num_of_rows; i++)
     {
-        for (int j = 0; map->map[i][j] != '\n'; i++)
+        for (int j = 0; map->map[i][j] != '\n'; j++)
             find_squares(i, j, map);
     }  
 }
@@ -310,4 +335,5 @@ void clear_mem(t_map * map)
         if (map->map[i])
             free(map->map[i]);
     }
+    free(map->map);
 }
