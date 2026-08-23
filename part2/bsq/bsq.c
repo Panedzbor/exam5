@@ -76,10 +76,11 @@ size_t ft_strlen(char * str)
 void run_program(char *filename)
 {
     t_map map;
-    if (!parser(filename, &map))
-        return;
-    find_solution(&map);
-    fill_solution(filename, map);
+    if (parser(filename, &map))
+    {
+        find_solution(&map);
+        fill_solution(filename, map);
+    } 
     clear_mem(&map);
 }
 
@@ -335,5 +336,6 @@ void clear_mem(t_map * map)
         if (map->map[i])
             free(map->map[i]);
     }
-    free(map->map);
+    if (map->map)
+        free(map->map);
 }
