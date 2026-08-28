@@ -6,14 +6,15 @@ void run_program(char *filename);
 bool parser(char * filename, t_map * map);
 bool check_map(int stage, t_map * map, t_len l, char * str);
 char * strdupl(char * src);
-int strtonum(char * str, int n);
+int strtoint(char * str, int n);
 void find_solution(t_map * map);
 void find_squares(int row, int start_col, t_map * map);
 bool fillable(char field, char empty);
 bool check_down_rows(int row, int col, int sq_len, int count, t_map * map);
 void record_square(int row, int start_col, int sq_len, t_map * map);
-void fill_solution(char * filename, t_map map);
-bool check_dimension(int row, int col, t_map map);
+//void fill_solution(char * filename, t_map map);
+void print_solution(t_map map);
+bool check_cell(int row, int col, t_map map);
 void clear_mem(t_map * map);
 
 int main(int argc, char * argv[])
@@ -80,7 +81,7 @@ void run_program(char *filename)
     if (parser(filename, &map))
     {
         find_solution(&map);
-        fill_solution(filename, map);
+        print_solution(map);
     } 
     clear_mem(&map);
 }
@@ -105,19 +106,21 @@ bool parser(char * filename, t_map * map)
         return false;
     }
     // count how long is row num
-    int n = 0;
-    while (first_line[n] != ' ')
+    size_t flen = ft_strlen(first_line);
+    size_t n = 0;
+    while (n < flen && first_line[n] != ' ')
         n++;
     // check row num
     // check first line on missing chars
-    if (!check_map(0, map, (t_len){n, 0}, first_line) || !check_map(1, map, (t_len){n, ft_strlen(first_line)}, 0))
+    if (!check_map(0, map, (t_len){n, 0}, first_line) || !check_map(1, map, (t_len){n, flen}, 0))
     {
+        free(first_line);
         fclose(file);
         return false;
     }
     // assign first line values
     map->fline = first_line;
-    map->num_of_rows = strtonum(first_line, n);
+    map->num_of_rows = strtoint(first_line, n);
     map->empty = first_line[n + 1];
     map->obstacle = first_line[n + 3];
     map->full = first_line[n + 5];
@@ -180,7 +183,7 @@ bool parser(char * filename, t_map * map)
     return true;
 }
 
-int strtonum(char * str, int n)
+int strtoint(char * str, int n)
 {
     char temp[n];
     for (int i = 0; i < n; i++)
@@ -224,6 +227,8 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
             break;
         case 1:
             if (l.len2 < l.len1 + 7)
+                result = false;
+            else if (l.len1 == l.len2)
                 result = false;
             break;
         case 2:
@@ -325,35 +330,51 @@ void record_square(int row, int start_col, int sq_len, t_map * map)
     map->sq_len = sq_len;
 }
 
-void fill_solution(char * filename, t_map map)
-{
-    // open file
-    FILE * file = fopen(filename, "w");
-    if (!file)
-    {
-        fprintf(stderr, "Error: File couldn't be opened\n");
-        return;
-    }
+// void fill_solution(char * filename, t_map map)
+// {
+//     // open file
+//     FILE * file = fopen(filename, "w");
+//     if (!file)
+//     {
+//         fprintf(stderr, "Error: File couldn't be opened\n");
+//         return;
+//     }
 
-    // write to file
-    fputs(map.fline, file);
+//     // write to file
+//     fputs(map.fline, file);
+//     for (int i = 0; i < map.num_of_rows; i++)
+//     {
+//         for (int j = 0; map.map[i][j]; j++)
+//         {
+//             char str[2] = {'\0', '\0'};
+//             if (check_cell(i, j, map))
+//                 str[0] = map.full;
+//             else
+//                 str[0] = map.map[i][j];
+//             fputs(str, file);
+//         }
+//     }
+
+//     fclose(file);
+// }
+
+void print_solution(t_map map)
+{
     for (int i = 0; i < map.num_of_rows; i++)
     {
         for (int j = 0; map.map[i][j]; j++)
         {
             char str[2] = {'\0', '\0'};
-            if (check_dimension(i, j, map))
+            if (check_cell(i, j, map))
                 str[0] = map.full;
             else
                 str[0] = map.map[i][j];
-            fputs(str, file);
+            fprintf(stdout, str);
         }
-    }
-
-    fclose(file);
+    }   
 }
 
-bool check_dimension(int row, int col, t_map map)
+bool check_cell(int row, int col, t_map map)
 {
     if (row >= map.sq_row && row < map.sq_row + map.sq_len && col >= map.sq_col && col < map.sq_col + map.sq_len)
         return true;
@@ -364,7 +385,7 @@ void clear_mem(t_map * map)
 {
     if (map->fline)
         free(map->fline);
-    for (int i = 0; i < map->num_of_rows; i++)
+    for (int i = 0; i < map->num_of_rows && map->map; i++)
     {
         if (map->map[i])
             free(map->map[i]);
