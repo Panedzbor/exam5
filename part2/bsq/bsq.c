@@ -7,21 +7,29 @@ bool parser(char * filename, t_map * map);
 bool check_map(int stage, t_map * map, t_len l, char * str);
 char * strdupl(char * src);
 int strtoint(char * str, int n);
-void find_solution(t_map * map);
+void cycle_each_cell(t_map * map);
 void find_squares(int row, int start_col, t_map * map);
 bool fillable(char field, char empty);
 bool check_down_rows(int row, int col, int sq_len, int count, t_map * map);
 void record_square(int row, int start_col, int sq_len, t_map * map);
 //void fill_solution(char * filename, t_map map);
 void print_solution(t_map map);
-bool check_cell(int row, int col, t_map map);
+bool cell_is_within_square(int row, int col, t_map map);
 void clear_mem(t_map * map);
 
 int main(int argc, char * argv[])
 {
     char * filename = NULL;
     size_t size = 0;
-    if (argc < 2)
+    if (argc >= 2)
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            filename = argv[i];
+            run_program(filename);
+        }
+    }
+    else
     {
         fprintf(stdout, "Input filename:\n");
         if (getline(&filename, &size, stdin) != -1)
@@ -36,14 +44,6 @@ int main(int argc, char * argv[])
         }
         else
             fprintf(stderr, "Could not read from stdin\n"); 
-    }
-    else
-    {
-        for (int i = 1; i < argc; i++)
-        {
-            filename = argv[i];
-            run_program(filename);
-        }
     }
     return 0;
 }
@@ -80,7 +80,7 @@ void run_program(char *filename)
     t_map map = {0};
     if (parser(filename, &map))
     {
-        find_solution(&map);
+        cycle_each_cell(&map);
         print_solution(map);
     } 
     clear_mem(&map);
@@ -278,7 +278,7 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
     return result;
 }
 
-void find_solution(t_map * map)
+void cycle_each_cell(t_map * map)
 {
     for (int i = 0; i < map->num_of_rows; i++)
     {
@@ -347,7 +347,7 @@ void record_square(int row, int start_col, int sq_len, t_map * map)
 //         for (int j = 0; map.map[i][j]; j++)
 //         {
 //             char str[2] = {'\0', '\0'};
-//             if (check_cell(i, j, map))
+//             if (cell_is_within_square(i, j, map))
 //                 str[0] = map.full;
 //             else
 //                 str[0] = map.map[i][j];
@@ -365,7 +365,7 @@ void print_solution(t_map map)
         for (int j = 0; map.map[i][j]; j++)
         {
             char str[2] = {'\0', '\0'};
-            if (check_cell(i, j, map))
+            if (cell_is_within_square(i, j, map))
                 str[0] = map.full;
             else
                 str[0] = map.map[i][j];
@@ -374,7 +374,7 @@ void print_solution(t_map map)
     }   
 }
 
-bool check_cell(int row, int col, t_map map)
+bool cell_is_within_square(int row, int col, t_map map)
 {
     if (row >= map.sq_row && row < map.sq_row + map.sq_len && col >= map.sq_col && col < map.sq_col + map.sq_len)
         return true;
