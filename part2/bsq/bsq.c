@@ -110,8 +110,7 @@ bool parser(char * filename, t_map * map)
     size_t n = 0;
     while (n < flen && first_line[n] != ' ')
         n++;
-    // check row num
-    // check first line on missing chars
+    // check if row num is present and has non numerics // check first line on missing chars
     if (!check_map(0, map, (t_len){n, 0}, first_line) || !check_map(1, map, (t_len){n, flen}, 0))
     {
         free(first_line);
@@ -124,7 +123,6 @@ bool parser(char * filename, t_map * map)
     map->empty = first_line[n + 1];
     map->obstacle = first_line[n + 3];
     map->full = first_line[n + 5];
-
     // init other values
     map->sq_col = 0;
     map->sq_row = 0;
@@ -146,7 +144,7 @@ bool parser(char * filename, t_map * map)
         return false;
     }
 
-    // assign map + check line lengths
+    // assign map lines
     char * buf = NULL;
     size_t prev_len = 0;
     int i;
@@ -154,6 +152,7 @@ bool parser(char * filename, t_map * map)
     {
         char * line = strdupl(buf);
         size_t linelen = ft_strlen(line);
+            // check if real row num > map-declared  // check line lengths
         if (!check_map(3, map, (t_len){i, 0}, 0) || !check_map(4, map, (t_len){prev_len, linelen}, 0))
         {
             fclose(file);
@@ -169,9 +168,7 @@ bool parser(char * filename, t_map * map)
     if (buf)
         free(buf);
 
-    // check if there is at least one line on the map
-    // check if last line ends with a line break + check if rows count equals file info
-    // check for all chars
+    // check if there is at least one line on the map // check if real row num == map-declared + last line ends with a line break // check all chars
     if (!check_map(5, map, (t_len){i, 0}, 0) || !check_map(6, map, (t_len){prev_len, i}, 0) || !check_map(7, map, (t_len){prev_len, 0}, 0))
     {
         fclose(file);
@@ -216,7 +213,7 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
 
     switch (stage)
     {
-        case 0:
+        case 0: // check if row num is present and has non numerics
             if (!l.len1)
                 result = false;
             for (size_t i = 0; i < l.len1; i++)
@@ -225,23 +222,23 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
                     result = false;
             }
             break;
-        case 1:
+        case 1: // check first line on missing chars
             if (l.len2 < l.len1 + 7)
                 result = false;
             else if (l.len1 == l.len2)
                 result = false;
             break;
-        case 2:
+        case 2: // check for duplicates and non-printables
             if (map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full)
                 result = false;
             else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->full < 127 && map->obstacle > 31 && map->obstacle < 127))
                 result = false;
             break;
-        case 3:
+        case 3: // check if real row num > map-declared
             if (l.len1 >= (size_t)map->num_of_rows)
                 result = false;
             break;
-        case 4:
+        case 4: // check line lengths
             if (l.len2 == 1)
                 result = false;
             else if (!l.len1)
@@ -249,15 +246,15 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
             else if (l.len2 != l.len1)
                 result = false;
             break;
-        case 5:
+        case 5: // check if there is at least one line on the map
             if (!l.len1)
                 result = false;
             break;
-        case 6:
+        case 6: // check if real row num == map-declared // check if last line ends with a line break
             if ((size_t)map->num_of_rows != l.len2 || map->map[map->num_of_rows - 1][l.len1 - 1] != '\n')
                 result = false;
             break;
-        case 7:
+        case 7: // check all chars
             for (int i = 0; i < map->num_of_rows && result; i++)
             {
                 for (int j = 0; map->map[i][j]; j++)
