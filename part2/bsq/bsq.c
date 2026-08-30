@@ -117,13 +117,13 @@ bool parser(char * filename, t_map * map)
         fclose(file);
         return false;
     }
-    // assign first line values
+    // save first line values to struct
     map->fline = first_line;
     map->num_of_rows = strtoint(first_line, n);
     map->empty = first_line[n + 1];
     map->obstacle = first_line[n + 3];
     map->full = first_line[n + 5];
-    // init other values
+    // init other struct values
     map->sq_col = 0;
     map->sq_row = 0;
     map->sq_len = 0;
@@ -144,7 +144,7 @@ bool parser(char * filename, t_map * map)
         return false;
     }
 
-    // assign map lines
+    // save map lines to struct
     char * buf = NULL;
     size_t prev_len = 0;
     int i;
@@ -152,21 +152,18 @@ bool parser(char * filename, t_map * map)
     {
         char * line = strdupl(buf);
         size_t linelen = ft_strlen(line);
-            // check if real row num > map-declared  // check line lengths
+            // check if current row num > map-declared  // check line lengths
         if (!check_map(3, map, (t_len){i, 0}, 0) || !check_map(4, map, (t_len){prev_len, linelen}, 0))
         {
             fclose(file);
-            if (buf)
-                free(buf);
-            if (line)
-                free(line);
+            free(buf);
+            free(line);
             return false;
         }
         map->map[i] = line;
         prev_len = linelen;
     }
-    if (buf)
-        free(buf);
+    free(buf);
 
     // check if there is at least one line on the map // check if real row num == map-declared + last line ends with a line break // check all chars
     if (!check_map(5, map, (t_len){i, 0}, 0) || !check_map(6, map, (t_len){prev_len, i}, 0) || !check_map(7, map, (t_len){prev_len, 0}, 0))
@@ -234,7 +231,7 @@ bool check_map(int stage, t_map * map, t_len l, char * str)
             else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->full < 127 && map->obstacle > 31 && map->obstacle < 127))
                 result = false;
             break;
-        case 3: // check if real row num > map-declared
+        case 3: // check if current row num > map-declared
             if (l.len1 >= (size_t)map->num_of_rows)
                 result = false;
             break;
@@ -380,13 +377,8 @@ bool cell_is_within_square(int row, int col, t_map map)
 
 void clear_mem(t_map * map)
 {
-    if (map->fline)
-        free(map->fline);
+    free(map->fline);
     for (int i = 0; i < map->num_of_rows && map->map; i++)
-    {
-        if (map->map[i])
-            free(map->map[i]);
-    }
-    if (map->map)
-        free(map->map);
+        free(map->map[i]);
+    free(map->map);
 }
