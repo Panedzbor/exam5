@@ -12,7 +12,6 @@ void find_squares(int row, int start_col, t_map * map);
 bool fillable(char field, char empty);
 bool check_down_rows(int row, int col, int sq_len, t_map * map);
 void record_square(int row, int start_col, int sq_len, t_map * map);
-//void fill_solution(char * filename, t_map map);
 void print_solution(t_map map);
 bool cell_is_within_square(int row, int col, t_map map);
 void clear_mem(t_map * map);
@@ -101,8 +100,6 @@ bool parser(char * filename, t_map * map)
     // count how long is row num
     size_t flen = ft_strlen(first_line);
     size_t n = 0;
-    //while (n < flen && first_line[n] != ' ')
-    //    n++;
     while (first_line[n] && first_line[n] != ' ')
         n++;
     // check if row num is present and has non numerics // check first line on missing chars
