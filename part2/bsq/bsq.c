@@ -1,62 +1,5 @@
 #include "bsq.h"
 
-char * trunc_name(char * filename, size_t size);
-size_t ft_strlen(char * str);
-void run_program(char *filename);
-bool parser(char * filename, t_map * map);
-bool check_map(int stage, t_map * map, t_len l, char * str);
-char * strdupl(char * src);
-int strtoint(char * str, int n);
-void cycle_each_cell(t_map * map);
-void find_squares(int row, int start_col, t_map * map);
-bool fillable(char field, char empty);
-bool check_down_rows(int row, int col, int sq_len, t_map * map);
-void record_square(int row, int start_col, int sq_len, t_map * map);
-void print_solution(t_map map);
-bool cell_is_within_square(int row, int col, t_map map);
-void clear_mem(t_map * map);
-
-int main(int argc, char * argv[])
-{
-    if (argc > 1)
-    {
-        for (int i = 1; i < argc; i++)
-            run_program(argv[i]);
-    }
-    else
-    {
-        char * filename = NULL;
-        size_t size = 0;
-        fprintf(stdout, "Input filename:\n");
-        if (getline(&filename, &size, stdin) != -1)
-        {
-            filename[ft_strlen(filename) - 1] = '\0';
-            run_program(filename);
-            free(filename);
-        }
-        else
-            fprintf(stderr, "Could not read from stdin\n");
-    }
-    return 0;
-}
-
-char * trunc_name(char * filename, size_t size)
-{
-    char * new = (char *)calloc(size, sizeof(char));
-    if (!new)
-    {
-        fprintf(stderr, "Error truncating the filename\n");
-        return NULL;
-    }
-
-    size_t i;
-    for (i = 0; i < size - 1; i++)
-        new[i] = filename[i];
-    new[i] = '\0';
-
-    return new;
-}
-
 size_t ft_strlen(char * str)
 {
     if (!str)
@@ -67,15 +10,97 @@ size_t ft_strlen(char * str)
     return i;
 }
 
-void run_program(char *filename)
+int strtoint(char * str, int n)
 {
-    t_map map = {0};
-    if (parser(filename, &map))
+    char temp[n];
+    for (int i = 0; i < n; i++)
+        temp[i] = str[i];
+    int num = 0;
+    int mult = 1;
+    for (int i = n - 1; i >= 0; i--, mult *= 10)
+        num += (temp[i] - '0') * mult;
+    return num;
+}
+
+char * strdupl(char * src)
+{
+    size_t len = ft_strlen(src);
+    if (!len)
+        return NULL;
+    char * cpy = (char *)calloc(len + 1, sizeof(char));
+    if (!cpy)
+        return NULL;
+    size_t i;
+    for (i = 0; i < len; i++)
+        cpy[i] = src[i];
+    cpy[i] = '\0';
+    return cpy;
+}
+
+bool check_map(int stage, t_map * map, t_len l, char * str)
+{
+    bool result = true;
+
+    switch (stage)
     {
-        cycle_each_cell(&map);
-        print_solution(map);
+        case 0: // check if row num is present and has non numerics
+            if (!l.len1)
+                result = false;
+            for (size_t i = 0; i < l.len1; i++)
+            {
+                if (!(str[i] >= '0' && str[i] <= '9'))
+                    result = false;
+            }
+            break;
+        case 1: // check first line on missing chars
+            if (l.len2 < l.len1 + 7)
+                result = false;
+            break;
+        case 2: // check if row num isnt 0
+            if (!map->num_of_rows)
+                result = false;
+            break;
+        case 3: // check for duplicates and non-printables
+            if (map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full)
+                result = false;
+            else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->full < 127 && map->obstacle > 31 && map->obstacle < 127))
+                result = false;
+            break;
+        case 4: // check if current row num > map-declared
+            if (l.len1 >= (size_t)map->num_of_rows)
+                result = false;
+            break;
+        case 5: // check line lengths
+            if (l.len2 == 1)
+                result = false;
+            else if (!l.len1)
+                result = true;
+            else if (l.len2 != l.len1)
+                result = false;
+            break;
+        case 6: // check if real row num == map-declared // check if last line ends with a line break
+            if ((size_t)map->num_of_rows != l.len2 || map->map[map->num_of_rows - 1][l.len1 - 1] != '\n')
+                result = false;
+            break;
+        case 7: // check all chars
+            for (int i = 0; i < map->num_of_rows && result; i++)
+            {
+                for (int j = 0; map->map[i][j]; j++)
+                {
+                    char mch = map->map[i][j];
+                    if (mch != map->empty && mch != map->obstacle && !((size_t)j == l.len1 - 1 && mch == '\n'))
+                    {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+            break;
     }
-    clear_mem(&map);
+
+    if (!result)
+        fprintf(stderr, "map error\n");
+    return result;
 }
 
 bool parser(char * filename, t_map * map)
@@ -175,123 +200,6 @@ bool parser(char * filename, t_map * map)
     return true;
 }
 
-int strtoint(char * str, int n)
-{
-    char temp[n];
-    for (int i = 0; i < n; i++)
-        temp[i] = str[i];
-    int num = 0;
-    int mult = 1;
-    for (int i = n - 1; i >= 0; i--, mult *= 10)
-        num += (temp[i] - '0') * mult;
-    return num;
-}
-
-char * strdupl(char * src)
-{
-    size_t len = ft_strlen(src);
-    if (!len)
-        return NULL;
-    char * cpy = (char *)calloc(len + 1, sizeof(char));
-    if (!cpy)
-        return NULL;
-    size_t i;
-    for (i = 0; i < len; i++)
-        cpy[i] = src[i];
-    cpy[i] = '\0';
-    return cpy;
-}
-
-bool check_map(int stage, t_map * map, t_len l, char * str)
-{
-    bool result = true;
-
-    switch (stage)
-    {
-        case 0: // check if row num is present and has non numerics
-            if (!l.len1)
-                result = false;
-            for (size_t i = 0; i < l.len1; i++)
-            {
-                if (!(str[i] >= '0' && str[i] <= '9'))
-                    result = false;
-            }
-            break;
-        case 1: // check first line on missing chars
-            if (l.len2 < l.len1 + 7)
-                result = false;
-            break;
-        case 2: // check if row num isnt 0
-            if (!map->num_of_rows)
-                result = false;
-            break;
-        case 3: // check for duplicates and non-printables
-            if (map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full)
-                result = false;
-            else if (!(map->empty > 31 && map->empty < 127 && map->full > 31 && map->full < 127 && map->obstacle > 31 && map->obstacle < 127))
-                result = false;
-            break;
-        case 4: // check if current row num > map-declared
-            if (l.len1 >= (size_t)map->num_of_rows)
-                result = false;
-            break;
-        case 5: // check line lengths
-            if (l.len2 == 1)
-                result = false;
-            else if (!l.len1)
-                result = true;
-            else if (l.len2 != l.len1)
-                result = false;
-            break;
-        case 6: // check if real row num == map-declared // check if last line ends with a line break
-            if ((size_t)map->num_of_rows != l.len2 || map->map[map->num_of_rows - 1][l.len1 - 1] != '\n')
-                result = false;
-            break;
-        case 7: // check all chars
-            for (int i = 0; i < map->num_of_rows && result; i++)
-            {
-                for (int j = 0; map->map[i][j]; j++)
-                {
-                    char mch = map->map[i][j];
-                    if (mch != map->empty && mch != map->obstacle && !((size_t)j == l.len1 - 1 && mch == '\n'))
-                    {
-                        result = false;
-                        break;
-                    }
-                }
-            }
-            break;
-    }
-
-    if (!result)
-        fprintf(stderr, "map error\n");
-    return result;
-}
-
-void cycle_each_cell(t_map * map)
-{
-    for (int i = 0; i < map->num_of_rows; i++)
-    {
-        for (int j = 0; map->map[i][j] != '\n'; j++)
-            find_squares(i, j, map);
-    }
-}
-
-void find_squares(int row, int start_col, t_map * map)
-{
-    for (int i = start_col, sq_len = 1; map->map[row][i] != '\n'; i++, sq_len++)
-    {
-        if (!fillable(map->map[row][i], map->empty))
-            return;
-        for (int j = 1; j < sq_len; j++)
-        {
-            if (!check_down_rows(row + j, start_col, sq_len, map))
-                return;
-        }
-        record_square(row, start_col, sq_len, map);
-    }
-}
-
 bool fillable(char field, char empty)
 {
     if (field == empty)
@@ -320,6 +228,37 @@ void record_square(int row, int start_col, int sq_len, t_map * map)
     map->sq_len = sq_len;
 }
 
+void find_squares(int row, int start_col, t_map * map)
+{
+    for (int i = start_col, sq_len = 1; map->map[row][i] != '\n'; i++, sq_len++)
+    {
+        if (!fillable(map->map[row][i], map->empty))
+            return;
+        for (int j = 1; j < sq_len; j++)
+        {
+            if (!check_down_rows(row + j, start_col, sq_len, map))
+                return;
+        }
+        record_square(row, start_col, sq_len, map);
+    }
+}
+
+void cycle_each_cell(t_map * map)
+{
+    for (int i = 0; i < map->num_of_rows; i++)
+    {
+        for (int j = 0; map->map[i][j] != '\n'; j++)
+            find_squares(i, j, map);
+    }
+}
+
+bool cell_is_within_square(int row, int col, t_map map)
+{
+    if (row >= map.sq_row && row < map.sq_row + map.sq_len && col >= map.sq_col && col < map.sq_col + map.sq_len)
+        return true;
+    return false;
+}
+
 void print_solution(t_map map)
 {
     for (int i = 0; i < map.num_of_rows; i++)
@@ -336,17 +275,45 @@ void print_solution(t_map map)
     }
 }
 
-bool cell_is_within_square(int row, int col, t_map map)
-{
-    if (row >= map.sq_row && row < map.sq_row + map.sq_len && col >= map.sq_col && col < map.sq_col + map.sq_len)
-        return true;
-    return false;
-}
-
 void clear_mem(t_map * map)
 {
     free(map->fline);
     for (int i = 0; i < map->num_of_rows && map->map; i++)
         free(map->map[i]);
     free(map->map);
+}
+
+void run_program(char *filename)
+{
+    t_map map = {0};
+    if (parser(filename, &map))
+    {
+        cycle_each_cell(&map);
+        print_solution(map);
+    }
+    clear_mem(&map);
+}
+
+int main(int argc, char * argv[])
+{
+    if (argc > 1)
+    {
+        for (int i = 1; i < argc; i++)
+            run_program(argv[i]);
+    }
+    else
+    {
+        char * filename = NULL;
+        size_t size = 0;
+        fprintf(stdout, "Input filename:\n");
+        if (getline(&filename, &size, stdin) != -1)
+        {
+            filename[ft_strlen(filename) - 1] = '\0';
+            run_program(filename);
+            free(filename);
+        }
+        else
+            fprintf(stderr, "Could not read from stdin\n");
+    }
+    return 0;
 }
