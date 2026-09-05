@@ -221,8 +221,8 @@ void find_squares(int row, int col, t_map * map)
 		}
 		record_map(row, col, sqlen, map);
 	}
-	//check if cur cell is empty
 	//increment sqlen each cycle starting at 1
+	//check if cur cell is empty
 	//for each cycle check down rows starting from row + 1 until row + sqlen
 	//record
 }
