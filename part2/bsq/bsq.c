@@ -175,7 +175,7 @@ bool parser(char * filename, t_map * map)
     {
         char * line = strdupl(buf);
         size_t linelen = ft_strlen(line);
-            // check if current row num > map-declared  // check line lengths
+        // check if current row num > map-declared // check line lengths
         if (!check_map(4, map, (t_len){i, 0}, 0) || !check_map(5, map, (t_len){prev_len, linelen}, 0))
         {
             fclose(file);
@@ -207,11 +207,11 @@ bool fillable(char field, char empty)
     return false;
 }
 
-bool check_down_rows(int row, int col, int sq_len, t_map * map)
+bool check_down_row(int row, int col, int sq_len, t_map * map)
 {
     if (row == map->num_of_rows)
         return false;
-    for (int i = col; i < col + sq_len && map->map[row][i] != '\n'; i++)
+    for (int i = col; i < col + sq_len; i++)
     {
         if (!fillable(map->map[row][i], map->empty))
             return false;
@@ -236,7 +236,7 @@ void find_squares(int row, int start_col, t_map * map)
             return;
         for (int j = 1; j < sq_len; j++)
         {
-            if (!check_down_rows(row + j, start_col, sq_len, map))
+            if (!check_down_row(row + j, start_col, sq_len, map))
                 return;
         }
         record_square(row, start_col, sq_len, map);
