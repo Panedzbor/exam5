@@ -10,7 +10,7 @@ size_t ft_strlen(char * str)
     return i;
 }
 
-int strtoint(char * str, int n)
+int lefttoint(char * str, int n)
 {
     char temp[n];
     for (int i = 0; i < n; i++)
@@ -135,7 +135,7 @@ bool parser(char * filename, t_map * map)
     }
     // save first line values to struct
     map->fline = first_line;
-    map->num_of_rows = strtoint(first_line, n);
+    map->num_of_rows = lefttoint(first_line, n);
     map->empty = first_line[n + 1];
     map->obstacle = first_line[n + 3];
     map->full = first_line[n + 5];
