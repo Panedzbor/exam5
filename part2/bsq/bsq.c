@@ -16,8 +16,7 @@ int strtoint(char * str, int n)
     for (int i = 0; i < n; i++)
         temp[i] = str[i];
     int num = 0;
-    int mult = 1;
-    for (int i = n - 1; i >= 0; i--, mult *= 10)
+    for (int i = n - 1, mult = 1; i >= 0; i--, mult *= 10)
         num += (temp[i] - '0') * mult;
     return num;
 }
